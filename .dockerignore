@@ -1,0 +1,68 @@
+# .dockerignore
+# 这个文件指定了在构建 Docker 镜像时应忽略的文件和目录。
+# 忽略这些文件可以减小构建上下文的大小，加快构建速度，并避免将不必要或敏感的文件复制到镜像中。
+
+# Git 相关文件和目录
+.git
+.gitignore
+.gitattributes
+
+# Go 模块依赖目录 (如果使用 vendor，则不应忽略)
+# vendor/
+
+# 临时文件和目录
+tmp/
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# 日志文件
+*.log
+logs/
+
+# 本地配置文件 (通常通过挂载卷或环境变量在运行时提供)
+# config/local.*.yaml
+# .env (如果 .env 文件仅用于本地 docker-compose 且不应进入镜像)
+.env
+
+# IDE 和编辑器特定的配置文件
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# 操作系统特定的文件
+.DS_Store
+Thumbs.db
+
+# 测试相关文件和目录 (如果不需要在最终镜像中包含测试代码)
+*test*
+*_test.go
+coverage.*
+test_results/
+
+# 文档目录 (通常不需要在生产镜像中)
+docs/
+# swagger/ (如果 Swaggo 生成的文档在特定目录且不需要在镜像中)
+
+# Docker 相关文件 (避免 Dockerfile 本身被复制到上下文中不必要的地方)
+# Dockerfile
+# docker-compose.yml
+
+# 构建产物 (除了最终编译的二进制文件，其他中间产物通常不需要)
+# bin/
+# build/
+# release/
+
+# 前端或 UI 相关的源代码目录 (如果它们是独立构建和部署的)
+# frontend/
+# admin-ui/
+# ui/
+# web/
+
+# 任何其他不应包含在 Docker 镜像中的文件或目录
+secrets/
+credentials/
+*.pem
+*.key

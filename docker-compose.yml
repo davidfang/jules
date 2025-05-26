@@ -1,0 +1,136 @@
+# docker-compose.yml for go-base-system-v2
+
+# 定义 Docker Compose 文件版本。
+# 版本 '3.8' 支持现代 Docker Compose 功能。
+version: '3.8'
+
+# 定义应用包含的服务 (容器)。
+services:
+  # "app" 服务：运行 Go 应用本身。
+  app:
+    # 构建指令：
+    # context: "." 表示 Dockerfile 位于当前目录 (与 docker-compose.yml 同级)。
+    # dockerfile: "Dockerfile" 指定 Dockerfile 的文件名 (如果不是默认的 "Dockerfile")。
+    build:
+      context: .
+      # dockerfile: Dockerfile # 如果文件名是 Dockerfile，此行可省略
+    container_name: go_base_system_app # 为容器指定一个易于识别的名称。
+    
+    # 端口映射：
+    # 将主机的端口映射到容器的端口。
+    # 格式: "HOST_PORT:CONTAINER_PORT"
+    # ${APP_HTTP_PORT:-8080} 表示：如果环境变量 APP_HTTP_PORT 已设置，则使用其值作为主机端口；
+    # 否则，默认使用主机端口 8080。容器内的应用始终在 8080 端口监听 (由 Dockerfile EXPOSE 和应用配置决定)。
+    ports:
+      - "${APP_HTTP_PORT:-8080}:8080" 
+      
+    # 卷映射：
+    # 将本地的 ./config 目录以只读 (ro) 方式挂载到容器内的 /home/appuser/config 目录。
+    # 这允许在本地修改配置文件 (config.yaml, casbin_model.conf) 并立即在运行的容器中生效，
+    # 而无需重新构建镜像，非常适合开发和测试。
+    # 对于生产环境，通常会将配置文件构建到镜像中，或使用配置管理系统。
+    volumes:
+      - ./config:/home/appuser/config:ro
+      
+    # 环境变量：
+    # 定义容器内应用可以访问的环境变量。
+    # 这些变量会覆盖应用配置文件 (config.yaml) 中的相应设置，
+    # 因为 Viper 通常会优先使用环境变量。
+    environment:
+      # 应用配置
+      - APP_SERVER_PORT=8080 # 容器内应用监听的端口 (与 Dockerfile EXPOSE 和 config.yaml 一致)
+      - APP_GIN_RUN_MODE=${GIN_RUN_MODE:-release} # Gin 运行模式 (debug, release, test)
+      - APP_LOGGER_LEVEL=${LOGGER_LEVEL:-info} # 日志级别
+      
+      # 数据库配置 (连接到下面的 "db" 服务)
+      - APP_DATABASE_HOST=db # "db" 是下面定义的 MySQL 服务的网络别名
+      - APP_DATABASE_USER=${DB_USER:-appuser} # 数据库用户名 (应与 db 服务中的 MYSQL_USER 匹配)
+      - APP_DATABASE_PASSWORD=${DB_PASSWORD:-apppassword} # 数据库密码 (应与 db 服务中的 MYSQL_PASSWORD 匹配)
+      - APP_DATABASE_DBNAME=${DB_NAME:-go_base_system_v2_dev} # 数据库名称 (应与 db 服务中的 MYSQL_DATABASE 匹配)
+      
+      # JWT 配置
+      - APP_JWT_SECRET_KEY=${JWT_SECRET_KEY:-a_very_secure_default_key_for_compose_CHANGE_ME_IN_ENV_FILE}
+      - APP_JWT_ISSUER=go-base-system-v2-compose
+      - APP_JWT_ACCESS_TOKEN_EXPIRE_DURATION=1h
+      
+      # Casbin 配置 (如果 casbin_model.conf 在挂载的 config 目录中，则 model_path 通常不需要通过环境变量覆盖)
+      # - APP_CASBIN_MODEL_PATH=/home/appuser/config/casbin_model.conf
+      
+    # 服务依赖：
+    # depends_on 确保 "db" 服务在 "app" 服务启动之前启动。
+    # 注意：这只保证 "db" 容器已启动，不保证数据库服务已完全就绪。
+    # 应用层应实现重试逻辑或使用 "healthcheck" (如下面的 db 服务所示) 来确保数据库可用。
+    depends_on:
+      db:
+        condition: service_healthy # 等待 db 服务健康检查通过后再启动 app 服务
+        
+    # 重启策略：
+    # unless-stopped: 除非手动停止，否则容器在退出时总是会重启。
+    restart: unless-stopped
+    
+    # 网络：
+    # 将此服务连接到下面定义的 "app-network" 网络。
+    networks:
+      - app-network
+
+  # "db" 服务：运行 MySQL 数据库。
+  db:
+    image: mysql:8.0.33 # 使用特定版本的 MySQL 官方镜像，以确保环境一致性。
+    container_name: go_base_system_mysql # 为数据库容器指定名称。
+    
+    # MySQL 启动命令：
+    # --default-authentication-plugin=mysql_native_password 用于设置默认的认证插件，
+    // 以兼容一些旧的客户端或驱动。
+    command: --default-authentication-plugin=mysql_native_password
+    
+    restart: unless-stopped # 重启策略。
+    
+    # 环境变量 (用于 MySQL 容器的初始化)：
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-yourstrongrootpassword123} # MySQL root 用户密码。
+      MYSQL_DATABASE: ${DB_NAME:-go_base_system_v2_dev} # 要创建的数据库名称。
+      MYSQL_USER: ${DB_USER:-appuser}                   # 要创建的普通数据库用户。
+      MYSQL_PASSWORD: ${DB_PASSWORD:-apppassword}       # 普通用户的密码。
+      
+    # 端口映射：
+    # 将主机的端口 (默认为 3307，可通过 DB_HOST_PORT 环境变量覆盖) 映射到容器的 MySQL 默认端口 3306。
+    # 映射到主机不同的端口 (如 3307) 可以避免与本地已运行的 MySQL 服务冲突。
+    ports:
+      - "${DB_HOST_PORT:-3307}:3306"
+      
+    # 卷映射：
+    # 将名为 "db_data" 的 Docker 卷挂载到容器的 /var/lib/mysql 目录。
+    # 这是 MySQL 存储数据的地方。使用命名卷可以确保在容器重启或删除后数据得以持久化。
+    volumes:
+      - db_data:/var/lib/mysql
+      
+    # 健康检查：
+    # 定义了如何检查数据库服务是否已准备好接受连接。
+    # test: 执行的命令。mysqladmin ping 检查 MySQL 服务器是否响应。
+    # interval: 检查间隔。
+    # timeout: 单次检查的超时时间。
+    # retries: 认为检查失败前的重试次数。
+    # start_period: 容器启动后，在首次健康检查失败被视为“不健康”之前，给予的宽限期。
+    # 这对于需要较长时间初始化的服务（如数据库）非常重要。
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u$${MYSQL_USER}", "-p$${MYSQL_PASSWORD}"] # 使用 $$ 转义 $ 字符
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+      
+    networks:
+      - app-network
+
+# 顶层卷定义：
+# 定义了一个名为 "db_data" 的命名卷。
+# 如果不指定外部驱动，Docker 会使用默认的本地驱动来管理此卷。
+volumes:
+  db_data: {} # 空对象表示使用默认驱动
+
+# 顶层网络定义：
+# 定义了一个名为 "app-network" 的自定义桥接网络。
+# 使用自定义网络可以提供更好的隔离性，并允许容器通过服务名称进行通信 (例如，"app" 服务可以通过 "db" 主机名访问数据库服务)。
+networks:
+  app-network:
+    driver: bridge # 使用默认的桥接网络驱动。

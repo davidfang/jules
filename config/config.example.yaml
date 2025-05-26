@@ -1,0 +1,59 @@
+# config/config.example.yaml
+# 这是应用的配置文本文档模板。
+# 在实际部署或本地开发时，应复制此文件为 config.yaml，并修改其中的配置项。
+# 敏感信息（如密码、密钥）应使用强随机值，并考虑通过环境变量覆盖。
+
+server:
+  port: "8080" # HTTP 服务监听的端口
+  run_mode: "debug" # Gin 运行模式 (debug, release, test)
+
+logger:
+  level: "debug" # 日志级别 (debug, info, warn, error, dpanic, panic, fatal)
+  format: "console" # 日志格式 ("json" 或 "console")
+  output_paths: ["stdout"] # 日志输出路径 (可以是 stdout, stderr, 或文件路径)
+  error_output_paths: ["stderr"] # 错误日志输出路径
+  development: true # 是否为 Zap 开发模式 (影响日志格式和堆栈跟踪等)
+  disable_caller: false # 是否禁用在日志中记录调用者信息 (文件名和行号)
+  disable_stacktrace: false # 是否禁用在特定级别（如 Error）的日志中自动记录堆栈跟踪
+
+app:
+  name: "GoBaseSystemV2" # 应用名称
+  version: "1.0.0" # 应用版本
+  env_prefix: "APP" # Viper 读取环境变量时的前缀 (例如 APP_SERVER_PORT)
+
+api: # API 相关配置
+  base_path: "/api/v1" # API 路由的基础路径
+
+database:
+  driver: "mysql" # 数据库驱动类型 (当前仅支持 "mysql")
+  # DSN (Data Source Name) 模板，用于构建数据库连接字符串。
+  # %s 占位符将按顺序被 user, password, host, port, dbname, charset, parseTime 替换。
+  source_template: "%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=%s&loc=Local"
+  host: "127.0.0.1" # 数据库主机地址 (在 Docker Compose 环境中，这通常是服务名，例如 "db")
+  port: "3306" # 数据库端口号
+  user: "root" # 数据库用户名
+  password: "YOUR_DB_PASSWORD_HERE" # 数据库密码 (强烈建议通过环境变量 APP_DATABASE_PASSWORD 提供)
+  dbname: "go_base_system_v2_dev" # 数据库名称
+  charset: "utf8mb4" # 数据库字符集
+  parseTime: "True" # 是否将数据库时间类型解析为 time.Time (对于 GORM 通常为 True)
+  max_idle_conns: 10 # GORM 连接池：最大空闲连接数
+  max_open_conns: 100 # GORM 连接池：最大打开连接数
+  conn_max_lifetime: "1h" # GORM 连接池：连接可被复用的最大时间 (Viper 可以解析时间字符串)
+
+gorm:
+  log_level: "info" # GORM 日志级别 (silent, error, warn, info)
+  slow_threshold_ms: 200 # GORM 慢 SQL 阈值 (毫秒)
+  skip_default_transaction: true # 是否为单个创建、更新、删除操作跳过默认事务
+  prepare_stmt: false # 是否在执行任何 SQL 时创建一个 prepared statement 并将其缓存，以提高后续调用的速度
+
+jwt:
+  secret_key: "YOUR_VERY_SECURE_JWT_SECRET_KEY_PLEASE_CHANGE_ME" # JWT 签名密钥 (强烈建议通过环境变量 APP_JWT_SECRET_KEY 提供，且长度足够安全)
+  issuer: "go-base-system-v2" # JWT 签发者
+  access_token_expire_duration: "1h" # JWT 访问令牌的过期时间 (例如 15m, 1h, 24h)
+  refresh_token_expire_duration: "720h" # JWT 刷新令牌的过期时间 (例如 7d, 30d) (可选，本次任务未实现刷新令牌逻辑)
+
+casbin:
+  model_path: "./config/casbin_model.conf" # Casbin 模型文件的路径 (相对于应用运行的根目录)
+  # policy_adapter: "gorm" # Casbin 策略适配器类型 (当前硬编码为 GORM，未来可配置)
+  # auto_load_policy: false # 是否启用 Casbin 策略自动从持久化存储中加载 (默认为 false)
+  # auto_load_policy_interval_minutes: 60 # 策略自动加载的时间间隔 (分钟) (默认为 60)

@@ -1,0 +1,53 @@
+server:
+  port: "8080"
+  run_mode: "debug" 
+
+logger:
+  level: "debug" 
+  format: "console" 
+  output_paths: ["stdout"]
+  error_output_paths: ["stderr"]
+  development: true 
+  disable_caller: false
+  disable_stacktrace: false
+
+app:
+  name: "GoBaseSystemV2"
+  version: "1.0.0"
+  env_prefix: "APP"
+  # api_base_path: "/api/v1" # 将 api.base_path 移到 app 或 server 下更合适
+
+api: # 新增 api 配置节
+  base_path: "/api/v1"
+
+database:
+  driver: "mysql" 
+  source_template: "%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=%s&loc=Local" 
+  host: "127.0.0.1"
+  port: "3306"
+  user: "root"
+  password: "" 
+  dbname: "go_base_system_v2_dev"
+  charset: "utf8mb4"
+  parseTime: "True"
+  max_idle_conns: 10
+  max_open_conns: 100
+  conn_max_lifetime: "1h"
+
+gorm:
+  log_level: "info" 
+  slow_threshold_ms: 200 
+  skip_default_transaction: true
+  prepare_stmt: false
+
+jwt:
+  secret_key: "your-very-secret-and-strong-key-CHANGE-ME" # 强烈建议通过环境变量 APP_JWT_SECRET_KEY 覆盖
+  issuer: "go-base-system-v2"
+  access_token_expire_duration: "1h" # 例如 1小时, 15m, 24h
+  refresh_token_expire_duration: "720h" # 例如 30天 (可选，本次任务未要求实现刷新令牌)
+
+casbin:
+  model_path: "./config/casbin_model.conf" 
+  # policy_adapter: "gorm" # GORM Adapter 是默认选择，通常不需要显式配置
+  # auto_load_policy: true # 可选，是否启用策略自动加载 (默认为 false)
+  # auto_load_policy_interval_minutes: 1 # 可选，策略自动加载间隔（分钟）(默认为 60)
