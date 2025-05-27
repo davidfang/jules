@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time" // 用于JWT过期时间
 
-	"go-base-system-v2/internal/dto"
-	"go-base-system-v2/internal/model"
-	"go-base-system-v2/internal/repository"
-	mock_repository "go-base-system-v2/internal/repository/mock" // Mock Repository
-	"go-base-system-v2/internal/service"
+	"go-base-system/internal/dto"
+	"go-base-system/internal/model"
+	"go-base-system/internal/repository"
+	mock_repository "go-base-system/internal/repository/mock" // Mock Repository
+	"go-base-system/internal/service"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/golang/mock/gomock"
@@ -76,7 +76,6 @@ func newTestUserServiceWithMocks(t *testing.T) (
 			}
 		}
 	}
-
 
 	enforcer, err := casbin.NewEnforcer(modelPath)
 	if err != nil {
@@ -142,8 +141,8 @@ func TestUserService_RegisterUser_Success(t *testing.T) {
 	assert.NotNil(t, createdUser)
 	assert.Equal(t, registerReq.Username, createdUser.Username)
 	assert.Equal(t, registerReq.Email, *createdUser.Email)
-	assert.Equal(t, uint(1), createdUser.ID) // 确认ID被赋予
-	assert.Empty(t, createdUser.PasswordHash) // 确认返回的密码哈希为空
+	assert.Equal(t, uint(1), createdUser.ID)       // 确认ID被赋予
+	assert.Empty(t, createdUser.PasswordHash)      // 确认返回的密码哈希为空
 	assert.Equal(t, "role_user", createdUser.Role) // 确认角色被设置
 
 	// （可选）验证 Casbin Enforcer 中是否添加了分组策略
@@ -201,7 +200,6 @@ func TestUserService_RegisterUser_EmailExists(t *testing.T) {
 	assert.Nil(t, createdUser)
 	assert.Contains(t, err.Error(), fmt.Sprintf("邮箱 '%s' 已被注册", registerReq.Email))
 }
-
 
 // TestUserService_LoginUser_Success 测试用户成功登录的场景。
 func TestUserService_LoginUser_Success(t *testing.T) {
@@ -296,7 +294,6 @@ func TestUserService_GetUserByUsername_Success(t *testing.T) {
 	expectedUser := &model.User{ID: 1, Username: username, Email: new(string), Role: "role_user"}
 	*expectedUser.Email = "test@example.com"
 
-
 	mockUserRepo.EXPECT().GetByUsername(gomock.Any(), username).Return(expectedUser, nil)
 
 	user, err := userService.GetUserByUsername(ctx, username)
@@ -334,7 +331,6 @@ func TestUserService_GetUserByID_Success(t *testing.T) {
 	userID := uint(1)
 	expectedUser := &model.User{ID: userID, Username: "testuser", Email: new(string), Role: "role_user"}
 	*expectedUser.Email = "test@example.com"
-
 
 	mockUserRepo.EXPECT().GetByID(gomock.Any(), userID).Return(expectedUser, nil)
 

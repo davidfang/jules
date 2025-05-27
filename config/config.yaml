@@ -23,10 +23,10 @@ api: # 新增 api 配置节
 database:
   driver: "mysql" 
   source_template: "%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=%s&loc=Local" 
-  host: "127.0.0.1"
+  host: "172.16.18.50"
   port: "3306"
   user: "root"
-  password: "" 
+  password: "51joying123456" 
   dbname: "go_base_system_v2_dev"
   charset: "utf8mb4"
   parseTime: "True"
@@ -49,5 +49,5 @@ jwt:
 casbin:
   model_path: "./config/casbin_model.conf" 
   # policy_adapter: "gorm" # GORM Adapter 是默认选择，通常不需要显式配置
-  # auto_load_policy: true # 可选，是否启用策略自动加载 (默认为 false)
-  # auto_load_policy_interval_minutes: 1 # 可选，策略自动加载间隔（分钟）(默认为 60)
+  auto_load_policy: true # 可选，是否启用策略自动加载 (默认为 false)
+  auto_load_policy_interval_minutes: 1 # 可选，策略自动加载间隔（分钟）(默认为 60)

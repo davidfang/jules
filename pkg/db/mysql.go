@@ -2,8 +2,6 @@ package db
 
 import (
 	"fmt"
-	"log" // 保留标准 log 用于 GORM 的默认 writer，如果需要
-	"os"
 	"time"
 
 	"github.com/spf13/viper"

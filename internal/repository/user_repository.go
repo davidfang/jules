@@ -6,7 +6,7 @@ import (
 	"context" // 导入 context 包，用于在请求处理和数据库操作中传递截止日期、取消信号等。
 	"errors"  // 导入 errors 包，用于创建自定义错误类型。
 
-	"go-base-system-v2/internal/model" // 导入应用的数据模型包。
+	"go-base-system/internal/model" // 导入应用的数据模型包。
 
 	"github.com/google/wire" // 导入 Wire 包，用于依赖注入。
 	"go.uber.org/zap"        // 导入 Zap 日志库。
@@ -64,10 +64,13 @@ type userRepositoryImpl struct {
 // 并返回一个实现了 UserRepository 接口的实例。
 // 此函数用于 Wire 进行依赖注入。
 // 参数:
-//   db: GORM 数据库连接实例。如果为 nil，函数将 panic。
-//   logger: Zap SugaredLogger 实例。如果为 nil，函数将 panic。
+//
+//	db: GORM 数据库连接实例。如果为 nil，函数将 panic。
+//	logger: Zap SugaredLogger 实例。如果为 nil，函数将 panic。
+//
 // 返回:
-//   UserRepository 接口的实例。
+//
+//	UserRepository 接口的实例。
 func NewUserRepository(db *gorm.DB, logger *zap.SugaredLogger) UserRepository { // 返回接口类型
 	if db == nil {
 		panic("NewUserRepository: GORM DB instance is nil")

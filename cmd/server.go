@@ -5,13 +5,14 @@ package cmd
 
 import (
 	"context" // 导入 context 包
-	"errors"  // 导入 errors 包
-	"fmt"     // 导入 fmt 用于错误处理
+	// 导入 errors 包
+	"fmt" // 导入 fmt 用于错误处理
+
+	"go-base-system/internal/dto"   // 导入 DTO 包
+	"go-base-system/internal/model" // 导入 User 模型
 
 	"github.com/spf13/cobra"
-	"go-base-system-v2/internal/dto"   // 导入 DTO 包
-	"go-base-system-v2/internal/model" // 导入 User 模型
-	// "go-base-system-v2/internal/repository" // repository.ErrNotFound 已通过 errors.Is 检查，直接导入 errors 即可
+	// "go-base-system/internal/repository" // repository.ErrNotFound 已通过 errors.Is 检查，直接导入 errors 即可
 	// Viper 和 Logger 实例将通过 cmd.AppInstance 访问
 )
 

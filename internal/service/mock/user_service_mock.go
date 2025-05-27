@@ -6,8 +6,8 @@ package mock_service
 
 import (
 	context "context"
-	dto "go-base-system-v2/internal/dto"
-	model "go-base-system-v2/internal/model"
+	dto "go-base-system/internal/dto"
+	model "go-base-system/internal/model"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"

@@ -3,21 +3,22 @@
 package server
 
 import (
-	"fmt" // 用于格式化错误信息和日志
+	// 用于格式化错误信息和日志
 	"strings" // 用于字符串操作，例如处理 API 基础路径
 
-	"go-base-system-v2/internal/handler"    // 导入 Handler 包，用于注册路由
-	"go-base-system-v2/internal/middleware" // 导入自定义的中间件包
-	"go-base-system-v2/pkg/logger"          // 导入自定义的日志中间件包
-	// "go-base-system-v2/pkg/middleware" // 如果有其他自定义中间件，可以在此导入
+	"go-base-system/internal/handler"    // 导入 Handler 包，用于注册路由
+	"go-base-system/internal/middleware" // 导入自定义的中间件包
+	"go-base-system/pkg/logger"          // 导入自定义的日志中间件包
 
-	"github.com/casbin/casbin/v2"               // 导入 Casbin 包
+	// "go-base-system/pkg/middleware" // 如果有其他自定义中间件，可以在此导入
+
+	"github.com/casbin/casbin/v2"              // 导入 Casbin 包
+	"github.com/gin-gonic/gin"                 // Gin Web 框架
+	"github.com/google/wire"                   // Wire 依赖注入库
+	"github.com/spf13/viper"                   // Viper 配置管理库
 	swaggerFiles "github.com/swaggo/files"     // Swagger UI 文件服务
 	ginSwagger "github.com/swaggo/gin-swagger" // Gin Swagger 中间件
-	"github.com/gin-gonic/gin"   // Gin Web 框架
-	"github.com/google/wire"     // Wire 依赖注入库
-	"github.com/spf13/viper"     // Viper 配置管理库
-	"go.uber.org/zap"            // Zap 高性能日志库
+	"go.uber.org/zap"                          // Zap 高性能日志库
 )
 
 // NewGinEngine 是一个 Wire Provider 函数，用于创建和配置一个新的 Gin HTTP 引擎实例。
@@ -25,16 +26,18 @@ import (
 // 定义 API 路由组，并挂载各个业务 Handler 的路由。
 //
 // 参数:
-//   cfg: Viper 配置实例，用于读取服务器相关的配置，如运行模式、API 基础路径等。
-//   zapSugaredLogger: Zap SugaredLogger 实例，用于在此函数内部记录初始化信息，
-//                     并传递给日志中间件（通过 .Desugar() 获取底层 *zap.Logger）。
-//   healthHandler: 健康检查 Handler 实例，用于注册 /health 路由。
-//   userHandler: 用户管理 Handler 实例，用于注册用户相关的 API 路由。
-//   enforcer: Casbin Enforcer 实例，用于授权。
+//
+//	cfg: Viper 配置实例，用于读取服务器相关的配置，如运行模式、API 基础路径等。
+//	zapSugaredLogger: Zap SugaredLogger 实例，用于在此函数内部记录初始化信息，
+//	                  并传递给日志中间件（通过 .Desugar() 获取底层 *zap.Logger）。
+//	healthHandler: 健康检查 Handler 实例，用于注册 /health 路由。
+//	userHandler: 用户管理 Handler 实例，用于注册用户相关的 API 路由。
+//	enforcer: Casbin Enforcer 实例，用于授权。
 //
 // 返回:
-//   *gin.Engine: 配置好的 Gin 引擎实例。
-//   error: 如果在初始化过程中发生不可恢复的错误，则返回错误。
+//
+//	*gin.Engine: 配置好的 Gin 引擎实例。
+//	error: 如果在初始化过程中发生不可恢复的错误，则返回错误。
 func NewGinEngine(
 	cfg *viper.Viper,
 	zapSugaredLogger *zap.SugaredLogger,
@@ -88,7 +91,7 @@ func NewGinEngine(
 	}
 	// 移除路径末尾的斜杠 (如果有)，并确保路径以斜杠开头。
 	basePath = "/" + strings.Trim(basePath, "/")
-	
+
 	apiGroup := r.Group(basePath) // 创建 API 路由组
 	zapSugaredLogger.Infof("所有 API 路由将注册在基础路径: %s 之下", basePath)
 
@@ -100,10 +103,10 @@ func NewGinEngine(
 	// 用户模块路由
 	userRoutes := apiGroup.Group("/users") // 创建 /users 子路由组
 	{
-		userRoutes.POST("/register", userHandler.RegisterUser)       // POST /api/v1/users/register
-		userRoutes.POST("/login", userHandler.LoginUser)             // POST /api/v1/users/login
+		userRoutes.POST("/register", userHandler.RegisterUser)               // POST /api/v1/users/register
+		userRoutes.POST("/login", userHandler.LoginUser)                     // POST /api/v1/users/login
 		userRoutes.GET("/username/:username", userHandler.GetUserByUsername) // GET /api/v1/users/username/{username}
-		userRoutes.GET("/id/:id", userHandler.GetUserByID)             // GET /api/v1/users/id/{id}
+		userRoutes.GET("/id/:id", userHandler.GetUserByID)                   // GET /api/v1/users/id/{id}
 		// 更多用户相关的路由可以继续在此处添加
 	}
 	zapSugaredLogger.Infof("用户模块路由已注册在 %s/users 之下。", basePath)
@@ -123,10 +126,9 @@ func NewGinEngine(
 	// apiGroup.Use(casbinAuthzMiddleware) // Casbin 授权
 	// zapSugaredLogger.Info("JWT 和 Casbin 中间件已应用到 apiGroup。")
 
-
 	// /me 路由组，首先进行 JWT 认证，然后进行 Casbin 授权
 	meRoutes := apiGroup.Group("/me")
-	meRoutes.Use(jwtAuthMiddleware)    // 先确保用户已登录 (JWT 认证)
+	meRoutes.Use(jwtAuthMiddleware)     // 先确保用户已登录 (JWT 认证)
 	meRoutes.Use(casbinAuthzMiddleware) // 然后检查用户是否有权限访问 (Casbin 授权)
 	{
 		// GET /api/v1/me/profile - 示例受保护路由，用于获取当前用户信息
@@ -170,9 +172,8 @@ func NewGinEngine(
 		// 我们将在下面 Swagger 部分后重新组织路由注册以正确应用中间件。
 	}
 
-
 	// 9. (可选) 注册 Swagger UI 文档路由 (如果使用了 Swaggo)
-	// 确保 "go-base-system-v2/docs" 包已通过空白导入被包含在 main.go 中，
+	// 确保 "go-base-system/docs" 包已通过空白导入被包含在 main.go 中，
 	// 以便 Swaggo 生成的 swagger 定义能够被注册。
 	swaggerPath := "/swagger/*any" // Swagger UI 路径，相对于 apiGroup
 	// ginSwagger.URL(...) 用于指定 swagger.json 文件的位置。
@@ -187,7 +188,6 @@ func NewGinEngine(
 	// 如果 swag init -g main.go 那么 docs.SwaggerInfo.BasePath 应该被设置为 /api/v1
 	apiGroup.GET(swaggerPath, ginSwagger.WrapHandler(swaggerFiles.Handler))
 	zapSugaredLogger.Infof("Swagger UI 文档已注册在: %s%s", basePath, "/swagger/index.html")
-
 
 	// 6. 返回配置好的 Gin 引擎实例
 	zapSugaredLogger.Info("Gin 引擎配置完成。")

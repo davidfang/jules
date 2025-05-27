@@ -28,7 +28,7 @@ import (
 func ProvideCasbinEnforcer(cfg *viper.Viper, db *gorm.DB, logger *zap.SugaredLogger) (*casbin.Enforcer, error) {
 	modelPath := cfg.GetString("casbin.model_path")
 	if modelPath == "" {
-		return nil, fmt.Errorf("Casbin 模型文件路径 (casbin.model_path) 未在配置中设置")
+		return nil, fmt.Errorf("casbin 模型文件路径 (casbin.model_path) 未在配置中设置")
 	}
 	logger.Infof("Casbin: 正在加载模型文件从路径: %s", modelPath)
 
@@ -106,7 +106,17 @@ func ProvideCasbinEnforcer(cfg *viper.Viper, db *gorm.DB, logger *zap.SugaredLog
 		if intervalMinutes == 0 {
 			intervalMinutes = 1 // 默认为 1 分钟
 		}
-		enforcer.StartAutoLoadPolicy(intervalMinutes * time.Minute)
+		go func() {
+			ticker := time.NewTicker(intervalMinutes * time.Minute)
+			defer ticker.Stop()
+			for range ticker.C {
+				if err := enforcer.LoadPolicy(); err != nil {
+					logger.Errorw("自动加载 Casbin 策略失败", "error", err)
+				} else {
+					logger.Info("Casbin 策略已重新加载。")
+				}
+			}
+		}()
 		logger.Infof("Casbin 策略自动加载已启用，间隔: %v 分钟。", intervalMinutes)
 	}
 

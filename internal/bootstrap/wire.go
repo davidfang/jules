@@ -5,18 +5,18 @@
 package bootstrap
 
 import (
-	"go-base-system-v2/internal/authz"     // 导入 authz 包 (Casbin)
-	"go-base-system-v2/internal/conf"      // 导入配置包
-	"go-base-system-v2/internal/db"         // 导入数据库包
-	"go-base-system-v2/internal/handler"    // 导入 handler 包
-	"go-base-system-v2/internal/repository" // 导入 repository 包
-	"go-base-system-v2/internal/server"     // 导入 server 包
-	"go-base-system-v2/internal/service"    // 导入 service 包
-	"go-base-system-v2/pkg/logger"       // 导入日志包
+	"go-base-system/internal/authz"      // 导入 authz 包 (Casbin)
+	"go-base-system/internal/conf"       // 导入配置包
+	"go-base-system/internal/db"         // 导入数据库包
+	"go-base-system/internal/handler"    // 导入 handler 包
+	"go-base-system/internal/repository" // 导入 repository 包
+	"go-base-system/internal/server"     // 导入 server 包
+	"go-base-system/internal/service"    // 导入 service 包
+	"go-base-system/pkg/logger"          // 导入日志包
 
 	"github.com/casbin/casbin/v2" // 导入 Casbin 包
-	"github.com/gin-gonic/gin"   // 导入 Gin 包
-	"github.com/google/wire"     // 导入 Wire 包
+	"github.com/gin-gonic/gin"    // 导入 Gin 包
+	"github.com/google/wire"      // 导入 Wire 包
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"gorm.io/gorm" // 导入 GORM 包
@@ -25,13 +25,13 @@ import (
 // App 结构体聚合了应用的核心组件实例。
 // 这些实例将由 Wire 自动构建和注入。
 type App struct {
-	Config   *viper.Viper                // Viper 配置实例
-	Logger   *zap.SugaredLogger          // Zap SugaredLogger 实例
-	DB       *gorm.DB                    // GORM 数据库连接实例
+	Config   *viper.Viper              // Viper 配置实例
+	Logger   *zap.SugaredLogger        // Zap SugaredLogger 实例
+	DB       *gorm.DB                  // GORM 数据库连接实例
 	UserRepo repository.UserRepository // 用户数据仓库接口实例
-	UserSvc  service.UserService         // 用户服务接口实例
-	Engine   *gin.Engine                 // Gin HTTP 引擎实例
-	Enforcer *casbin.Enforcer            // Casbin Enforcer 实例
+	UserSvc  service.UserService       // 用户服务接口实例
+	Engine   *gin.Engine               // Gin HTTP 引擎实例
+	Enforcer *casbin.Enforcer          // Casbin Enforcer 实例
 	// Cleanup func() // Cleanup 函数由 Injector 返回
 }
 
@@ -52,7 +52,7 @@ func NewApp(
 		DB:       gormDB,
 		UserRepo: userRepo,
 		UserSvc:  userSvc,
-		Engine:   engine, // 赋值 Gin 引擎
+		Engine:   engine,   // 赋值 Gin 引擎
 		Enforcer: enforcer, // 赋值 Casbin Enforcer
 	}
 }

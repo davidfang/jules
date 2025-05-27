@@ -38,10 +38,10 @@ func ProvideViper(opts ConfigOptions) (*viper.Viper, error) {
 	} else {
 		// 如果未指定配置文件路径，则按顺序搜索默认路径。
 		v.AddConfigPath("./config")                 // 1. 当前工作目录下的 config 子目录
-		v.AddConfigPath("$HOME/.go-base-system-v2") // 2. 用户主目录下的 .go-base-system-v2 子目录
+		v.AddConfigPath("$HOME/.go-base-system") // 2. 用户主目录下的 .go-base-system 子目录
 		v.SetConfigName("config")                   // 配置文件的名称（不带扩展名）
 		v.SetConfigType("yaml")                     // 明确指定配置文件类型为 YAML
-		// fmt.Println("Viper: 未指定配置文件路径，将搜索默认路径...") // 调试日志
+		fmt.Println("Viper: 未指定配置文件路径，将搜索默认路径...") // 调试日志
 	}
 
 	// 尝试读取配置文件。

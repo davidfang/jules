@@ -10,9 +10,9 @@ import (
 
 	"github.com/spf13/cobra"
 	// "github.com/spf13/viper" // Viper 将由 Wire 注入
-	"go-base-system-v2/internal/bootstrap" // 导入 bootstrap 包
-	"go-base-system-v2/internal/conf"      // 导入 conf 包，用于 ConfigOptions
-	// "go-base-system-v2/pkg/logger" // Logger 将从 AppInstance 获取
+	"go-base-system/internal/bootstrap" // 导入 bootstrap 包
+	"go-base-system/internal/conf"      // 导入 conf 包，用于 ConfigOptions
+	// "go-base-system/pkg/logger" // Logger 将从 AppInstance 获取
 	// "go.uber.org/zap" // Zap 将从 AppInstance 获取
 )
 
@@ -96,5 +96,3 @@ func initConfig() {
 	// ... (旧的 Viper 和 Logger 初始化代码) ...
 }
 */
-
-

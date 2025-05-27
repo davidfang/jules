@@ -2,16 +2,18 @@
 package handler
 
 import (
+	"fmt"
 	"errors"        // 用于检查特定错误类型，例如 repository.ErrNotFound
 	"net/http"      // HTTP 状态码常量
 	"strconv"       // 用于将字符串类型的 ID 转换为 uint
 	"strings"       // 导入 strings 包，用于错误消息检查
 	"unicode/utf8" // 用于验证路径参数的 UTF-8 编码
 
-	"go-base-system-v2/internal/dto"       // 数据传输对象
-	"go-base-system-v2/internal/repository" // Repository 层错误 (ErrNotFound)
-	"go-base-system-v2/internal/service"    // Service 层接口
-	"go-base-system-v2/pkg/response"       // 统一 API 响应包
+	"go-base-system/internal/dto"       // 数据传输对象
+	"go-base-system/internal/middleware" // 中间件
+	"go-base-system/internal/repository" // Repository 层错误 (ErrNotFound)
+	"go-base-system/internal/service"    // Service 层接口
+	"go-base-system/pkg/response"       // 统一 API 响应包
 
 	"github.com/gin-gonic/gin" // Gin 框架
 	"go.uber.org/zap"          // Zap 日志库
@@ -181,8 +183,7 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 	response.SuccessOK(c, user)
 }
 
-// 导入 fmt (如果之前未导入)
-import "fmt"
+
 
 // GetCurrentUserProfile godoc
 // @Summary      获取当前登录用户信息 (Get Current User Profile)
@@ -236,4 +237,4 @@ func (h *UserHandler) GetCurrentUserProfile(c *gin.Context) {
 }
 
 // 确保导入了 middleware 包
-// import "go-base-system-v2/internal/middleware" // 已在顶部导入
+// import "go-base-system/internal/middleware" // 已在顶部导入

@@ -4,13 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/wire" // 导入 Wire 包
 	"go.uber.org/zap"        // 导入 Zap SugaredLogger
 )
 
-// ProviderSet 是 handler 包中与健康检查相关的 Wire Provider Set。
-// 它导出了 NewHealthHandler 函数。
-var ProviderSet = wire.NewSet(NewHealthHandler)
 
 // HealthHandler 结构体封装了健康检查相关的依赖，例如 logger。
 type HealthHandler struct {

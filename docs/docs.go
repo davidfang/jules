@@ -26,7 +26,7 @@ const docTemplate = `{
     "paths": {
         "/health": {
             "get": {
-                "description": "检查 API 服务是否正常运行并可达。",
+                "description": "检查API服务是否正常运行",
                 "consumes": [
                     "application/json"
                 ],
@@ -34,12 +34,41 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "健康检查 (Health Check)"
+                    "健康检查"
                 ],
-                "summary": "服务健康检查 (Service Health Check)",
+                "summary": "服务健康检查",
                 "responses": {
                     "200": {
-                        "description": "成功\" // 更新 Success 注解",
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/me/profile": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取当前通过 JWT 认证的用户的详细信息。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户 (User)"
+                ],
+                "summary": "获取当前登录用户信息 (Get Current User Profile)",
+                "responses": {
+                    "200": {
+                        "description": "成功获取当前用户信息",
                         "schema": {
                             "allOf": [
                                 {
@@ -49,14 +78,29 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
-                                            }
+                                            "$ref": "#/definitions/model.User"
                                         }
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "401": {
+                        "description": "未授权或 Token 无效",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseData"
+                        }
+                    },
+                    "404": {
+                        "description": "用户未找到 (例如，Token 中的用户 ID 在数据库中不存在)",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseData"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseData"
                         }
                     }
                 }
@@ -125,6 +169,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/login": {
+            "post": {
+                "description": "使用用户名/邮箱和密码进行登录，成功后返回 JWT。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户认证 (User Authentication)"
+                ],
+                "summary": "用户登录 (User Login)",
+                "parameters": [
+                    {
+                        "description": "用户登录请求体",
+                        "name": "user_login_req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserLoginReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "登录成功，返回 JWT",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ResponseData"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.UserLoginRes"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseData"
+                        }
+                    },
+                    "401": {
+                        "description": "认证失败 (用户名或密码错误)",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseData"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误 (例如，Token 生成失败)",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseData"
+                        }
+                    }
+                }
+            }
+        },
         "/users/register": {
             "post": {
                 "description": "根据提供的用户名、邮箱和密码创建一个新用户。",
@@ -135,7 +243,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "用户 (User)"
+                    "用户认证 (User Authentication) // 将注册和登录归为同一 Tag"
                 ],
                 "summary": "用户注册 (Register User)",
                 "parameters": [
@@ -169,7 +277,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "请求参数错误\" // data 通常为 nil 或包含具体错误信息的对象",
+                        "description": "请求参数错误",
                         "schema": {
                             "$ref": "#/definitions/response.ResponseData"
                         }
@@ -249,6 +357,48 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.UserLoginReq": {
+            "type": "object",
+            "required": [
+                "password",
+                "username_or_email"
+            ],
+            "properties": {
+                "password": {
+                    "description": "Password 是用户的登录密码。\n` + "`" + `json:\"password\"` + "`" + `: 在 JSON 中此字段名为 \"password\"。\n` + "`" + `binding:\"required\"` + "`" + `: 此字段为必填项。",
+                    "type": "string"
+                },
+                "username_or_email": {
+                    "description": "UsernameOrEmail 是用户用于登录的标识，可以是用户名或电子邮件地址。\n` + "`" + `json:\"username_or_email\"` + "`" + `: 在 JSON 中此字段名为 \"username_or_email\"。\n` + "`" + `binding:\"required\"` + "`" + `: 此字段为必填项。",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UserLoginRes": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "description": "AccessToken 是用户成功登录后获取到的 JWT。\n客户端在后续请求中应将此 Token 包含在 Authorization 请求头中 (通常以 \"Bearer \" 为前缀)。",
+                    "type": "string"
+                },
+                "expires_in": {
+                    "description": "ExpiresIn 表示 AccessToken 的过期时间戳 (Unix timestamp in seconds)。\n客户端可以使用此信息来管理 Token 的生命周期，例如在过期前刷新 Token (如果支持刷新令牌)。",
+                    "type": "integer"
+                },
+                "token_type": {
+                    "description": "TokenType 表示令牌的类型。对于 JWT，这通常是 \"Bearer\"。",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "UserID 是成功登录的用户的唯一标识符。\n可选地在登录响应中返回用户ID，便于前端使用。",
+                    "type": "integer"
+                },
+                "username": {
+                    "description": "Username 是成功登录的用户的用户名。\n可选地在登录响应中返回用户名，便于前端使用。",
+                    "type": "string"
+                }
+            }
+        },
         "dto.UserRegisterReq": {
             "type": "object",
             "required": [
@@ -290,6 +440,10 @@ const docTemplate = `{
                     "description": "ID 是用户的主键，类型为 uint，并且在数据库中自增。",
                     "type": "integer"
                 },
+                "role": {
+                    "description": "Role 存储用户的角色，例如 \"role_user\", \"role_admin\"。\ngorm:\"type:varchar(50)\" 指定字段类型。\ngorm:\"default:'role_user'\" 指定数据库中此字段的默认值为 \"role_user\"。\ngorm:\"not null\" 指定字段不能为空。\njson:\"role,omitempty\" 指定 JSON 字段名，并在值为空时从 JSON 输出中省略此字段。",
+                    "type": "string"
+                },
                 "updated_at": {
                     "description": "UpdatedAt 记录用户最后更新的时间。\nGORM 会在创建和更新记录时自动填充此字段。",
                     "type": "string"
@@ -316,6 +470,14 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and JWT token. Example: \"Bearer {token}\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
@@ -329,8 +491,6 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "这是一个使用 Golang (Gin, GORM, Wire) 构建的基础系统 API 服务第二版。",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
-	LeftDelim:        "{{",
-	RightDelim:       "}}",
 }
 
 func init() {

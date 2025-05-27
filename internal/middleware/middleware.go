@@ -3,11 +3,13 @@
 package middleware
 
 import (
-	"net/http" // HTTP 状态码常量
-	"strings"  // 用于字符串操作，例如处理 Authorization 请求头
+	// HTTP 状态码常量
+	"fmt"
+	"go-base-system/pkg/jwtutil"  // JWT 工具包，用于解析 Token
+	"go-base-system/pkg/response" // 统一 API 响应包
+	"strings"                     // 用于字符串操作，例如处理 Authorization 请求头
 
-	"go-base-system-v2/pkg/jwtutil"  // JWT 工具包，用于解析 Token
-	"go-base-system-v2/pkg/response" // 统一 API 响应包
+	"github.com/casbin/casbin/v2" // 导入 Casbin 包
 
 	"github.com/gin-gonic/gin" // Gin Web 框架
 	"github.com/spf13/viper"   // Viper 配置管理库
@@ -31,11 +33,13 @@ const (
 // 如果 Token 无效或缺失，则中止请求并返回 HTTP 401 Unauthorized 错误。
 //
 // 参数:
-//   cfg: Viper 配置实例，用于读取 JWT 密钥等配置。
-//   logger: Zap SugaredLogger 实例，用于记录认证过程中的信息和错误。
+//
+//	cfg: Viper 配置实例，用于读取 JWT 密钥等配置。
+//	logger: Zap SugaredLogger 实例，用于记录认证过程中的信息和错误。
 //
 // 返回:
-//   gin.HandlerFunc: Gin 处理函数，可注册为中间件。
+//
+//	gin.HandlerFunc: Gin 处理函数，可注册为中间件。
 func JWTAuthMiddleware(cfg *viper.Viper, logger *zap.SugaredLogger) gin.HandlerFunc {
 	if cfg == nil {
 		panic("JWTAuthMiddleware: Viper config instance is nil")
@@ -92,24 +96,20 @@ func JWTAuthMiddleware(cfg *viper.Viper, logger *zap.SugaredLogger) gin.HandlerF
 	}
 }
 
-// 导入 fmt (如果之前未导入)
-import (
-	"fmt"
-	"github.com/casbin/casbin/v2" // 导入 Casbin 包
-)
-
 // CasbinMiddleware 是一个 Gin 中间件，用于基于 Casbin Enforcer 进行授权检查。
 // 它从 Gin Context 中获取当前认证用户的用户名 (由 JWTAuthMiddleware 设置)，
 // 以及请求的路径 (Object) 和方法 (Action)。
 // 然后使用 Casbin Enforcer 检查用户是否有权限访问该资源和执行该操作。
 //
 // 参数:
-//   enforcer: 配置好的 *casbin.Enforcer 实例。
-//   logger: Zap SugaredLogger 实例，用于记录授权过程中的信息和错误。
-//   cfg: Viper 配置实例 (当前未使用，但保留以备将来扩展，例如从配置中读取匿名用户的角色)。
+//
+//	enforcer: 配置好的 *casbin.Enforcer 实例。
+//	logger: Zap SugaredLogger 实例，用于记录授权过程中的信息和错误。
+//	cfg: Viper 配置实例 (当前未使用，但保留以备将来扩展，例如从配置中读取匿名用户的角色)。
 //
 // 返回:
-//   gin.HandlerFunc: Gin 处理函数，可注册为中间件。
+//
+//	gin.HandlerFunc: Gin 处理函数，可注册为中间件。
 func CasbinMiddleware(enforcer *casbin.Enforcer, logger *zap.SugaredLogger, cfg *viper.Viper) gin.HandlerFunc {
 	if enforcer == nil {
 		panic("CasbinMiddleware: Casbin Enforcer instance is nil")

@@ -27,8 +27,8 @@ Copyright © 2025 Your Name <your.email@example.com>
 package main
 
 import (
-	"go-base-system-v2/cmd"
-	_ "go-base-system-v2/docs" // 导入 Swaggo 生成的 docs 包
+	"go-base-system/cmd"
+	_ "go-base-system/docs" // 导入 Swaggo 生成的 docs 包
 	// "fmt"
 	// "os"
 )

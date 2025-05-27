@@ -6,7 +6,7 @@ package mock_repository
 
 import (
 	context "context"
-	model "go-base-system-v2/internal/model"
+	model "go-base-system/internal/model"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"

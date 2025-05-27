@@ -8,16 +8,16 @@ import (
 	"fmt"     // 用于格式化错误信息。
 	"strings" // 导入 strings 包
 
-	"go-base-system-v2/internal/dto"       // 数据传输对象，用于服务层方法的参数和返回值。
-	"go-base-system-v2/internal/model"     // 数据模型，代表数据库中的实体。
-	"go-base-system-v2/internal/repository" // Repository 层接口，用于数据持久化操作。
-	"go-base-system-v2/pkg/jwtutil"        // 导入 JWT 工具包
+	"go-base-system/internal/dto"        // 数据传输对象，用于服务层方法的参数和返回值。
+	"go-base-system/internal/model"      // 数据模型，代表数据库中的实体。
+	"go-base-system/internal/repository" // Repository 层接口，用于数据持久化操作。
+	"go-base-system/pkg/jwtutil"         // 导入 JWT 工具包
 
 	"github.com/casbin/casbin/v2" // 导入 Casbin 包
-	"github.com/google/wire"     // Wire 包，用于依赖注入。
-	"github.com/spf13/viper"     // 导入 Viper，用于 JWT 配置
-	"go.uber.org/zap"            // Zap 日志库，用于结构化日志记录。
-	"golang.org/x/crypto/bcrypt" // 用于密码哈希处理。
+	"github.com/google/wire"      // Wire 包，用于依赖注入。
+	"github.com/spf13/viper"      // 导入 Viper，用于 JWT 配置
+	"go.uber.org/zap"             // Zap 日志库，用于结构化日志记录。
+	"golang.org/x/crypto/bcrypt"  // 用于密码哈希处理。
 )
 
 // UserService 定义了用户相关业务逻辑的服务接口。
@@ -68,12 +68,15 @@ type userServiceImpl struct {
 // NewUserService 是 userServiceImpl 的构造函数 Provider。
 // 此函数用于 Wire 进行依赖注入，创建一个新的 UserService 实例。
 // 参数:
-//   userRepo: 实现了 repository.UserRepository 接口的实例。
-//   enforcer: Casbin Enforcer 实例。
-//   logger: Zap SugaredLogger 实例。
-//   cfg: Viper 配置实例。
+//
+//	userRepo: 实现了 repository.UserRepository 接口的实例。
+//	enforcer: Casbin Enforcer 实例。
+//	logger: Zap SugaredLogger 实例。
+//	cfg: Viper 配置实例。
+//
 // 返回:
-//   UserService 接口的实例。
+//
+//	UserService 接口的实例。
 func NewUserService(
 	userRepo repository.UserRepository,
 	enforcer *casbin.Enforcer, // 注入 Casbin Enforcer
@@ -119,7 +122,7 @@ func (s *userServiceImpl) RegisterUser(ctx context.Context, req *dto.UserRegiste
 	// 2. 检查邮箱是否已存在
 	s.logger.Debugw("Checking if email exists", "email", req.Email)
 	existingUserByEmail, err := s.userRepo.GetByEmail(ctx, req.Email) // 使用新变量名避免覆盖
-	if err != nil && err != repository.ErrNotFound { // 如果是 ErrNotFound 以外的错误
+	if err != nil && err != repository.ErrNotFound {                  // 如果是 ErrNotFound 以外的错误
 		s.logger.Errorw("Error checking email existence", "email", req.Email, "error", err)
 		return nil, fmt.Errorf("检查邮箱时发生错误: %w", err)
 	}
@@ -185,7 +188,6 @@ func (s *userServiceImpl) RegisterUser(ctx context.Context, req *dto.UserRegiste
 	// if err := s.enforcer.SavePolicy(); err != nil {
 	// 	s.logger.Errorw("Failed to save Casbin policy after adding grouping policy", "error", err)
 	// }
-
 
 	s.logger.Infow("User registered and initial role assigned successfully", "userID", user.ID, "username", user.Username, "role", user.Role)
 
