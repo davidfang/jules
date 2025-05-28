@@ -45,7 +45,7 @@ func Fail(c *gin.Context, httpStatusCode int, bizCode int, msg string) {
 	c.JSON(httpStatusCode, ResponseData{
 		Code: bizCode,
 		Msg:  msg,
-		Data: nil, // 失败响应通常不包含具体数据，或数据字段为 nil/空对象
+		Data: map[string]interface{}{}, // 当没有具体错误数据时，Data 字段返回一个空 JSON 对象
 	})
 }
 
@@ -58,7 +58,7 @@ func FailWithMessage(c *gin.Context, httpStatusCode int, msg string) {
 	c.JSON(httpStatusCode, ResponseData{
 		Code: DefaultBizErrorCode, // 使用预定义的默认业务错误码
 		Msg:  msg,
-		Data: nil,
+		Data: map[string]interface{}{}, // 当没有具体错误数据时，Data 字段返回一个空 JSON 对象
 	})
 }
 
@@ -74,6 +74,20 @@ func FailWithData(c *gin.Context, httpStatusCode int, bizCode int, msg string, d
 		Code: bizCode,
 		Msg:  msg,
 		Data: data,
+	})
+}
+
+// FailWithValidationErrors 函数用于统一处理参数校验错误。
+// 它返回一个包含详细错误信息的 JSON 响应，其中 data 字段是一个 map，列出校验失败的字段及其错误信息。
+// c: Gin 的上下文对象。
+// bizCode: 自定义的业务错误码，用于标识参数校验错误类型。
+// msg: 主错误消息，例如 "输入参数校验失败"。
+// details: 一个 map[string]string，键是校验失败的字段名，值是该字段具体的错误描述。
+func FailWithValidationErrors(c *gin.Context, bizCode int, msg string, details map[string]string) {
+	c.JSON(http.StatusBadRequest, ResponseData{ // 参数校验错误通常使用 HTTP 400 Bad Request
+		Code: bizCode,
+		Msg:  msg,
+		Data: details, // data 字段包含详细的校验错误信息
 	})
 }
 

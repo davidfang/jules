@@ -13,6 +13,7 @@ import (
 	"go-base-system/internal/middleware" // 中间件
 	"go-base-system/internal/repository" // Repository 层错误 (ErrNotFound)
 	"go-base-system/internal/service"    // Service 层接口
+	"go-base-system/pkg/errorhandler"   // 新导入的错误处理包
 	"go-base-system/pkg/response"       // 统一 API 响应包
 
 	"github.com/gin-gonic/gin" // Gin 框架
@@ -57,8 +58,14 @@ func NewUserHandler(userSvc service.UserService, logger *zap.SugaredLogger) *Use
 func (h *UserHandler) RegisterUser(c *gin.Context) {
 	var req dto.UserRegisterReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Warnw("用户注册请求参数绑定或校验失败", "error", err)
-		response.FailBadRequest(c, fmt.Sprintf("请求参数错误: %v", err))
+		h.logger.Warnw("用户注册请求参数绑定失败", "error", err)
+		// 首先尝试使用 HandleValidationErrors 处理校验错误
+		if errorhandler.HandleValidationErrors(c, err) {
+			return // 如果是校验错误，HandleValidationErrors 已经发送了响应
+		}
+		// 如果不是校验错误 (例如，JSON 格式错误)，则发送通用的参数格式错误响应
+		// 使用新的业务错误码 4000 代表请求参数格式错误
+		response.Fail(c, http.StatusBadRequest, 4000, "请求参数格式错误", map[string]interface{}{})
 		return
 	}
 
@@ -92,8 +99,14 @@ func (h *UserHandler) RegisterUser(c *gin.Context) {
 func (h *UserHandler) LoginUser(c *gin.Context) {
 	var req dto.UserLoginReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Warnw("用户登录请求参数绑定或校验失败", "error", err)
-		response.FailBadRequest(c, fmt.Sprintf("请求参数错误: %v", err))
+		h.logger.Warnw("用户登录请求参数绑定失败", "error", err)
+		// 首先尝试使用 HandleValidationErrors 处理校验错误
+		if errorhandler.HandleValidationErrors(c, err) {
+			return // 如果是校验错误，HandleValidationErrors 已经发送了响应
+		}
+		// 如果不是校验错误 (例如，JSON 格式错误)，则发送通用的参数格式错误响应
+		// 使用新的业务错误码 4000 代表请求参数格式错误
+		response.Fail(c, http.StatusBadRequest, 4000, "请求参数格式错误", map[string]interface{}{})
 		return
 	}
 

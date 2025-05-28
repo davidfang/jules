@@ -10,6 +10,7 @@ import (
 
 	"go-base-system/internal/dto"   // 导入 DTO 包
 	"go-base-system/internal/model" // 导入 User 模型
+	"go-base-system/pkg/translator" // 导入翻译器包
 
 	"github.com/spf13/cobra"
 	// "go-base-system/internal/repository" // repository.ErrNotFound 已通过 errors.Is 检查，直接导入 errors 即可
@@ -92,6 +93,14 @@ var serverCmd = &cobra.Command{
 			logger.Info("UserService 初步测试完成。")
 		}
 		// ---- UserService 初步测试 (结束) ----
+
+		// 初始化校验翻译器
+		logger.Info("正在初始化校验翻译器...")
+		if err := translator.InitTranslator(); err != nil {
+			logger.Fatalf("初始化校验翻译器失败: %v", err)
+			return fmt.Errorf("初始化校验翻译器失败: %w", err)
+		}
+		logger.Info("校验翻译器初始化成功。")
 
 		listenAddr := ":" + serverPort
 		logger.Infof("准备在地址 %s 上启动 HTTP Gin 服务器...", listenAddr)
