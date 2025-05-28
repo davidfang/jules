@@ -30,78 +30,84 @@ const LoginPage: React.FC = () => {
 
   // onFinish 函数现在使用 LoginFormValues 类型来注解表单提交的值
   const onFinish = async (values: LoginFormValues) => {
-    setLoading(true); // 开始登录，设置加载状态为 true
-    try {
-      // 调用 API Service 的 post 方法进行登录
-      // 后端期望的登录请求体是 dto.UserLoginReq: { username_or_email: string, password: string }
-      // Ant Design Form 的 values 对象的键名是 Form.Item 的 name 属性值
-      // loginData 明确指定类型为 UserLoginReq，确保了数据结构的正确性
-      const loginData: UserLoginReq = { 
-        username_or_email: values.usernameOrEmail, // 确保与 Form.Item name="usernameOrEmail" 一致
-        password: values.password,
-      };
+    setLoading(true); // setLoading(true) 应该在 try 块之外，或者在 try 块的最开始
+                     // 但 setLoading(false) 必须在 finally 中以确保执行。
+                     // 为了代码清晰，我们将 setLoading(true) 放在 try 之前。
+    
+    // 构造登录请求数据，确保与 UserLoginReq DTO 结构一致
+    const loginData: UserLoginReq = { 
+      username_or_email: values.usernameOrEmail,
+      password: values.password,
+    };
       
-      // loginRes 的类型应与后端 /users/login 端点返回的 JSON 结构匹配，
-      // 并且与 dto.UserLoginRes 结构体兼容。
-      // apiService.post 会自动处理 response.data，所以 loginRes 直接是后端 data 字段的内容。
-      const loginRes: UserLoginRes = await apiService.post<UserLoginRes>('/users/login', loginData);
-
-      if (loginRes && loginRes.access_token && loginRes.user_id && loginRes.username) {
-        // 登录成功，从响应数据中获取 token 和用户信息
-        const userData: AuthUser = {
-          id: loginRes.user_id,
-          username: loginRes.username,
-          role: loginRes.role || 'role_user', // 假设后端会返回 role，否则提供默认值
-        };
-        
-        // 调用 AuthContext 的 login 方法保存认证信息
-        await auth.login(loginRes.access_token, userData);
-        
-        message.success('登录成功！');
-        navigate('/'); // 跳转到后台首页 (或其他受保护的默认页)
-      } else {
-        // 响应数据不符合预期
-        message.error('登录失败：无效的响应数据。');
-        console.error('Login response data is invalid:', loginRes);
+    try {
+      // 定义期望的后端完整响应结构
+      interface BackendLoginResponse {
+        code: number;       // 业务响应码，例如 0 表示成功
+        msg: string;        // 响应消息
+        data: UserLoginRes; // 实际的业务数据，UserLoginRes 包含 access_token 等
       }
-    } catch (error: unknown) { // 将 error 类型从 any 修改为 unknown，更符合 TypeScript 的类型安全实践
-      // API 调用失败或发生其他错误
-      // apiService 的响应拦截器通常会处理 HTTP 错误并显示消息
-      console.error('登录请求失败:', error); // 仍然记录原始错误对象，便于调试
+      
+      // 调用 API Service 发送登录请求
+      // backendResponse 现在是后端返回的完整响应体 {code, msg, data: UserLoginRes}
+      const backendResponse = await apiService.post<BackendLoginResponse>('/users/login', loginData);
 
-      // 根据错误类型提供更具体的反馈
-      // 检查 error 是否是一个包含 response 属性的对象 (类似 AxiosError)
-      if (typeof error === 'object' && error !== null && 'response' in error) {
-        // 假设是类似 Axios 的错误结构，其中包含 response 对象
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 暂时允许any类型以访问response上的未知属性,理想情况下应有更具体的错误类型
-        const axiosError = error as any; 
-        if (axiosError.response?.data?.msg) {
-          // 如果 apiService 的拦截器没有显示消息，这里可以取消注释下一行来显示后端的错误消息
-          // message.error(axiosError.response.data.msg); 
-          console.error('详细错误信息 (来自后端):', axiosError.response.data.msg); // 记录后端提供的具体错误信息
+      // 检查业务响应码是否表示成功 (通常 code === 0) 且 data 字段存在
+      if (backendResponse && backendResponse.code === 0 && backendResponse.data) {
+        const loginBusinessData = backendResponse.data; // loginBusinessData 是 UserLoginRes 类型
+
+        // 校验从后端获取的关键业务数据是否存在
+        if (loginBusinessData.access_token && loginBusinessData.user_id && loginBusinessData.username) {
+          // 构造 AuthUser 对象用于 AuthContext
+          const userData: AuthUser = {
+            id: loginBusinessData.user_id,
+            username: loginBusinessData.username,
+            role: loginBusinessData.role || 'role_user', // 提供默认角色以防后端未返回
+          };
+          
+          // 调用 AuthContext 的 login 方法更新应用认证状态
+          await auth.login(loginBusinessData.access_token, userData);
+          
+          message.success('登录成功！'); // 用户提示：登录成功
+          navigate('/'); // 导航到应用首页或仪表盘
         } else {
-          // 如果 apiService 的拦截器没有显示消息，并且后端也没有提供具体的 msg
-          // message.error('登录时发生网络或服务器错误。');
-          console.error('登录时发生网络或服务器错误 (响应中无详细msg)。'); // 记录通用错误
+          // 虽然业务码表示成功，但响应的 data 字段中缺少必要的字段
+          console.error('登录成功但响应数据不完整:', backendResponse.data);
+          message.error('登录失败：服务器返回的用户信息不完整。');
         }
-      } else if (error instanceof Error) {
-        // 处理标准的 JavaScript Error 对象 (例如网络问题，或者在请求设置阶段抛出的错误)
-        // 如果 apiService 的拦截器没有显示消息
-        // message.error(error.message);
-        console.error('错误信息 (Error实例):', error.message); // 记录错误消息
       } else {
-        // 处理其他未知类型的错误
-        // 如果 apiService 的拦截器没有显示消息
-        // message.error('登录失败，发生未知错误。');
-        console.error('登录失败，发生未知类型的错误。'); // 记录未知错误
+        // 业务码表示失败 (code !== 0)，或响应结构不符合预期 (例如 backendResponse 为 null)
+        console.error('登录失败，后端业务码非0或响应格式问题:', backendResponse);
+        // 优先使用后端返回的 msg，如果不存在则提供通用错误信息
+        message.error(backendResponse?.msg || '登录失败：无效的响应或服务器错误。');
       }
-      // 注意：原代码注释提到 apiService 的响应拦截器已经处理了大部分 HTTP 错误并显示了 message。
-      // 因此，上述的 message.error(...) 调用大多被注释掉了，以避免可能出现的重复错误提示。
-      // 主要保留 console.error 用于开发和调试。
-      // 如果实际场景中 apiService 的拦截器没有按预期显示消息，或者需要在此处覆盖其行为，
-      // 可以取消相应 message.error(...) 行的注释。
+    } catch (error: unknown) { 
+      // catch 块处理 API 调用过程中的意外错误，例如网络问题，
+      // 或者 apiService 拦截器未能处理并重新抛出的错误。
+      // 后端返回的业务错误 (如 code !== 0) 应该在上面的 try 块中被处理。
+      console.error('登录请求遭遇意外错误:', error); 
+      let errorMessage = '登录发生意外错误，请稍后重试。'; // 默认的错误消息
+      
+      // 尝试从 AxiosError 中提取更具体的信息
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 允许any类型以检查isAxiosError等属性
+      if (typeof error === 'object' && error !== null && 'isAxiosError' in error && (error as any).isAxiosError) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 允许any类型以访问response和message
+        const axiosError = error as any; // 断言为 any 以访问 Axios 特有属性
+        if (axiosError.response?.data?.msg) {
+          // 如果后端在错误响应中提供了 msg 字段
+          errorMessage = axiosError.response.data.msg;
+        } else if (axiosError.message) { 
+          // 如果没有 response.data.msg，尝试使用 AxiosError 的顶层 message 属性
+            errorMessage = axiosError.message;
+        }
+      } else if (error instanceof Error) { 
+        // 处理其他标准的 JavaScript Error 对象
+        errorMessage = error.message;
+      }
+      
+      message.error(errorMessage); // 向用户显示最终确定的错误消息
     } finally {
-      setLoading(false); // 结束登录，设置加载状态为 false
+      setLoading(false); // 无论成功或失败，确保在 finally 块中将加载状态设置为 false
     }
   };
 
