@@ -94,8 +94,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // 如果正在加载初始状态，则显示全局加载指示器
   if (isLoading) {
     return (
+      // 使用 Spin 的 fullscreen 属性（如果 antd 版本支持）来实现全屏加载效果，
+      // 这通常能让 tip 属性按预期工作，解决相关警告。
+      // 如果 fullscreen 属性不可用或导致其他问题，则应考虑移除 tip 属性。
+      // 外部的 div 在 Spin 使用 fullscreen 时可能不再是完全必要的，
+      // 但暂时保留它，以确保在 Spin 的 fullscreen 实现不包含居中逻辑时，内容仍能居中。
+      // 如果 Spin fullscreen 本身就能完美居中，则此外部 div 可以被移除以简化结构。
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Spin size="large" tip="正在加载应用状态..." />
+        <Spin size="large" tip="正在加载应用状态..." fullscreen />
       </div>
     );
   }
