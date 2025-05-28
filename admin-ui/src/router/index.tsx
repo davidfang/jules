@@ -5,6 +5,7 @@ import { createBrowserRouter, type RouteObject } from 'react-router-dom'; // 移
 import AdminLayout from '../layouts/AdminLayout';
 import AuthLayout from '../layouts/AuthLayout';
 import LoginPage from '../pages/LoginPage';
+import RegisterPage from '../pages/RegisterPage'; // 导入注册页面组件
 import DashboardPage from '../pages/DashboardPage';
 import NotFoundPage from '../pages/NotFoundPage';
 import ProtectedRoute from './ProtectedRoute'; // 导入 ProtectedRoute
@@ -17,8 +18,8 @@ const routes: RouteObject[] = [
     element: <AuthLayout />,
     children: [
       { path: 'login', element: <LoginPage /> },
-      // 可以添加注册页面路由等
-      // { path: 'register', element: <RegisterPage /> },
+      { path: 'register', element: <RegisterPage /> }, // 新增：注册页面路由
+      // 可以添加忘记密码页面路由等
       // { path: 'forgot-password', element: <ForgotPasswordPage /> },
     ],
   },

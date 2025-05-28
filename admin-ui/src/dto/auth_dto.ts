@@ -19,3 +19,13 @@ export interface UserLoginRes {
   username: string;     // 用户名
   role?: string;        // 用户角色，可选
 }
+
+/**
+ * 用户注册请求的数据传输对象 (DTO)
+ * 对应后端 /users/register 接口期望的请求体结构
+ */
+export interface UserRegisterReq {
+  username: string;  // 用户名
+  email: string;     // 邮箱地址
+  password: string;  // 密码
+}
