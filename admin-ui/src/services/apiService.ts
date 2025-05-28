@@ -1,9 +1,18 @@
 // admin-ui/src/services/apiService.ts
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+// 从 'axios' 导入默认的 axios 对象以及其他需要的类型
+// 移除了 AxiosInstance 的直接命名导入，因为 Vite 的预构建产物可能未将其导出。
+// AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig 改为 type 导入，因为它们仅用作类型注解。
+import axios, { type AxiosRequestConfig, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 import { message } from 'antd'; // 用于全局错误提示
 
 // 1. 创建 Axios 实例
-const apiService: AxiosInstance = axios.create({
+// const apiService: AxiosInstance = axios.create({ // 旧的显式类型注解
+// AxiosInstance 类型现在由 axios.create() 的返回值自动推断。
+// TypeScript 能够根据 axios.create 的签名正确推断出 apiService 的类型。
+// 如果需要显式类型定义（例如为了在其他地方引用此类型），可以这样做：
+// type ApiServiceInstance = ReturnType<typeof axios.create>;
+// const apiService: ApiServiceInstance = axios.create({
+const apiService = axios.create({
   // 2. 设置基础 URL
   // Vite 环境变量通过 import.meta.env 访问
   // VITE_API_BASE_URL 应在 .env 文件中定义，例如 VITE_API_BASE_URL=http://localhost:8080/api/v1
