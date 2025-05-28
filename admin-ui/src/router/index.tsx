@@ -1,5 +1,7 @@
 // admin-ui/src/router/index.tsx
-import { createBrowserRouter, RouteObject } from 'react-router-dom'; // 移除了 Navigate，因为 ProtectedRoute 内部处理
+// 导入 createBrowserRouter 函数用于创建路由实例
+// RouteObject 作为类型导入，以明确其仅为类型注解，有助于 Vite 等构建工具处理
+import { createBrowserRouter, type RouteObject } from 'react-router-dom'; // 移除了 Navigate，因为 ProtectedRoute 内部处理
 import AdminLayout from '../layouts/AdminLayout';
 import AuthLayout from '../layouts/AuthLayout';
 import LoginPage from '../pages/LoginPage';
