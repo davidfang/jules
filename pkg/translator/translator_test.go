@@ -4,7 +4,6 @@ package translator_test
 import (
 	"fmt"
 	"go-base-system/pkg/translator" // 被测试的包
-	"reflect"
 	"strings"
 	"testing"
 
@@ -607,7 +606,7 @@ func TestRegisterTagNameFunc_IgnoreField(t *testing.T) {
 		HiddenField  string `json:"-" validate:"required"` // 这个 required 不应该被触发
 	}{VisibleField: ""}
 
-	validate := validator.New() // 获取一个 validator 实例
+	// validate := validator.New() // 获取一个 validator 实例
 	// 如果要测试全局 validator 的 TagNameFunc, 需要通过 binding.Validator.Engine()
 	vEngine, ok := binding.Validator.Engine().(*validator.Validate)
 	if !ok {

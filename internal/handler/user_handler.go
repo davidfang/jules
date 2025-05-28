@@ -65,7 +65,7 @@ func (h *UserHandler) RegisterUser(c *gin.Context) {
 		}
 		// 如果不是校验错误 (例如，JSON 格式错误)，则发送通用的参数格式错误响应
 		// 使用新的业务错误码 4000 代表请求参数格式错误
-		response.Fail(c, http.StatusBadRequest, 4000, "请求参数格式错误", map[string]interface{}{})
+		response.Fail(c, http.StatusBadRequest, 4000, "请求参数格式错误")
 		return
 	}
 
@@ -106,7 +106,7 @@ func (h *UserHandler) LoginUser(c *gin.Context) {
 		}
 		// 如果不是校验错误 (例如，JSON 格式错误)，则发送通用的参数格式错误响应
 		// 使用新的业务错误码 4000 代表请求参数格式错误
-		response.Fail(c, http.StatusBadRequest, 4000, "请求参数格式错误", map[string]interface{}{})
+		response.Fail(c, http.StatusBadRequest, 4000, "请求参数格式错误", )
 		return
 	}
 

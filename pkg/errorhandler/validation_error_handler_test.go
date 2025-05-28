@@ -162,27 +162,27 @@ func TestHandleValidationErrors(t *testing.T) {
 		assert.Empty(t, errorDetails, "Data should be an empty map for empty validation errors")
 	})
 }
-Okay, I've created `pkg/errorhandler/validation_error_handler_test.go`.
+// Okay, I've created `pkg/errorhandler/validation_error_handler_test.go`.
 
-Here's a summary of what I've done:
+// Here's a summary of what I've done:
 
-1.  **`TestMain`**: Added `TestMain` to ensure `translator.InitTranslator()` is called once before any tests in this package run. This is crucial because `HandleValidationErrors` relies on the translator being initialized to correctly translate validation messages.
-2.  **`TestHandleValidationErrors`**: This is the main test function, broken down into subtests for different scenarios:
-    *   **`nil_error`**: Tests that passing `nil` as an error results in `false` being returned, no HTTP response written (status code 0), and an empty body.
-    *   **`generic_error`**: Tests that passing a standard `error` (not `validator.ValidationErrors`) also results in `false`, no HTTP response written, and an empty body.
-    *   **`validation_errors`**: This is the core test case.
-        *   It constructs a sample struct (`TestRequest`) with validation tags.
-        *   It creates an instance of this struct that violates these rules.
-        *   It uses Gin's validator engine (which should have been configured by `translator.InitTranslator()`) to get `validator.ValidationErrors`.
-        *   It calls `errorhandler.HandleValidationErrors` with a Gin test context and these errors.
-        *   It asserts that `true` is returned.
-        *   It verifies that the HTTP status code in the `httptest.ResponseRecorder` is `http.StatusBadRequest`.
-        *   It unmarshals the JSON response body into `response.ResponseData`.
-        *   It checks if `respData.Code` is `4001` and `respData.Msg` is `"输入参数校验失败"`.
-        *   It validates that `respData.Data` is a map containing the correctly translated error messages for the specific validation failures (e.g., `{"username": "username 长度不能少于 3 个字符。", "email_field": "email_field 必须是有效的邮箱地址。"}`).
-    *   **`empty_validation_errors`**: Tests the scenario of passing an empty `validator.ValidationErrors` slice. It should still be handled as a validation error (return `true`, status 400, code 4001, msg "输入参数校验失败"), but the `data` field in the response should be an empty map.
+// 1.  **`TestMain`**: Added `TestMain` to ensure `translator.InitTranslator()` is called once before any tests in this package run. This is crucial because `HandleValidationErrors` relies on the translator being initialized to correctly translate validation messages.
+// 2.  **`TestHandleValidationErrors`**: This is the main test function, broken down into subtests for different scenarios:
+//     *   **`nil_error`**: Tests that passing `nil` as an error results in `false` being returned, no HTTP response written (status code 0), and an empty body.
+//     *   **`generic_error`**: Tests that passing a standard `error` (not `validator.ValidationErrors`) also results in `false`, no HTTP response written, and an empty body.
+//     *   **`validation_errors`**: This is the core test case.
+//         *   It constructs a sample struct (`TestRequest`) with validation tags.
+//         *   It creates an instance of this struct that violates these rules.
+//         *   It uses Gin's validator engine (which should have been configured by `translator.InitTranslator()`) to get `validator.ValidationErrors`.
+//         *   It calls `errorhandler.HandleValidationErrors` with a Gin test context and these errors.
+//         *   It asserts that `true` is returned.
+//         *   It verifies that the HTTP status code in the `httptest.ResponseRecorder` is `http.StatusBadRequest`.
+//         *   It unmarshals the JSON response body into `response.ResponseData`.
+//         *   It checks if `respData.Code` is `4001` and `respData.Msg` is `"输入参数校验失败"`.
+//         *   It validates that `respData.Data` is a map containing the correctly translated error messages for the specific validation failures (e.g., `{"username": "username 长度不能少于 3 个字符。", "email_field": "email_field 必须是有效的邮箱地址。"}`).
+//     *   **`empty_validation_errors`**: Tests the scenario of passing an empty `validator.ValidationErrors` slice. It should still be handled as a validation error (return `true`, status 400, code 4001, msg "输入参数校验失败"), but the `data` field in the response should be an empty map.
 
-All assertions are done using `github.com/stretchr/testify/assert`. Chinese comments are included.
+// All assertions are done using `github.com/stretchr/testify/assert`. Chinese comments are included.
 
-Now, let's proceed to Part 3: Updating tests for `internal/handler/user_handler_test.go`.
-First, I need to read the content of `internal/handler/user_handler_test.go`.
+// Now, let's proceed to Part 3: Updating tests for `internal/handler/user_handler_test.go`.
+// First, I need to read the content of `internal/handler/user_handler_test.go`.

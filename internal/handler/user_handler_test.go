@@ -250,7 +250,7 @@ func TestLoginUser(t *testing.T) {
 
 	t.Run("successful_login", func(t *testing.T) {
 		mockUserSvc.LoginUserFunc = func(ctx context.Context, req *dto.UserLoginReq) (*dto.UserLoginRes, error) {
-			return &dto.UserLoginRes{Token: "mock_jwt_token", UserID: 1}, nil
+			return &dto.UserLoginRes{AccessToken: "mock_jwt_token", UserID: 1}, nil
 		}
 
 		reqPayload := dto.UserLoginReq{UsernameOrEmail: "testuser", Password: "password123"}
@@ -298,7 +298,7 @@ func TestLoginUser(t *testing.T) {
 		json.Unmarshal(w.Body.Bytes(), &respData)
 		assert.Equal(t, 4001, respData.Code)
 		assert.Equal(t, "输入参数校验失败", respData.Msg)
-		errorDetails, _ := respData.Data.(map[string]interface{})
+		// errorDetails, _ := respData.Data.(map[string]interface{})
 		// UserLoginReq.UsernameOrEmail 的 json tag 是 "usernameOrEmail"
 		// 假设 UserLoginReq.UsernameOrEmail 有 validate:"min=3"
 		// 实际的 dto.UserLoginReq: UsernameOrEmail string `json:"usernameOrEmail" binding:"required"`
@@ -365,37 +365,37 @@ func TestLoginUser(t *testing.T) {
 // 但它们不涉及请求体绑定，所以主要测试路径参数处理、服务层交互和响应格式。
 // 由于当前任务主要关注校验错误和格式错误处理，这些将省略。Okay, I've created `internal/handler/user_handler_test.go`.
 
-Here's a summary of what I've done for this file:
+// Here's a summary of what I've done for this file:
 
-1.  **`TestMain`**:
-    *   Initialized `translator.InitTranslator()` critical for validation error messages.
-    *   Set up a `zap.SugaredLogger` for the handler.
-    *   Created a `mockUserService` and the `UserHandler` instance.
-    *   Set Gin to `testMode`.
+// 1.  **`TestMain`**:
+//     *   Initialized `translator.InitTranslator()` critical for validation error messages.
+//     *   Set up a `zap.SugaredLogger` for the handler.
+//     *   Created a `mockUserService` and the `UserHandler` instance.
+//     *   Set Gin to `testMode`.
 
-2.  **`mockUserService`**: A simple mock for `service.UserService` allowing function overrides for different test scenarios.
+// 2.  **`mockUserService`**: A simple mock for `service.UserService` allowing function overrides for different test scenarios.
 
-3.  **`performRequest` helper**: A utility to simplify making HTTP requests to the Gin router and capturing the response.
+// 3.  **`performRequest` helper**: A utility to simplify making HTTP requests to the Gin router and capturing the response.
 
-4.  **`TestRegisterUser`**:
-    *   **`successful_registration`**: Tests the happy path where user registration succeeds. Asserts status 201, and correct response structure (`code: 0`, `msg: "success"`, and user data).
-    *   **`validation_error_missing_username`**: Tests when the `username` is missing. Asserts status 400, `code: 4001`, `msg: "输入参数校验失败"`, and `data: {"username": "username 不能为空!"}`.
-    *   **`validation_error_invalid_email`**: Tests when `email` has an invalid format. Asserts status 400, `code: 4001`, `msg: "输入参数校验失败"`, and `data: {"email": "email 必须是有效的邮箱地址。"}`. (Note: DTO's `email` field has `json:"email"`)
-    *   **`malformed_json_request`**: Sends an incomplete JSON string. Asserts status 400, `code: 4000`, `msg: "请求参数格式错误"`, and `data: {}`.
-    *   **`service_error_email_exists`**: Simulates the service layer returning an error (e.g., email already registered). Asserts status 400 and the specific error message from the handler's logic.
+// 4.  **`TestRegisterUser`**:
+//     *   **`successful_registration`**: Tests the happy path where user registration succeeds. Asserts status 201, and correct response structure (`code: 0`, `msg: "success"`, and user data).
+//     *   **`validation_error_missing_username`**: Tests when the `username` is missing. Asserts status 400, `code: 4001`, `msg: "输入参数校验失败"`, and `data: {"username": "username 不能为空!"}`.
+//     *   **`validation_error_invalid_email`**: Tests when `email` has an invalid format. Asserts status 400, `code: 4001`, `msg: "输入参数校验失败"`, and `data: {"email": "email 必须是有效的邮箱地址。"}`. (Note: DTO's `email` field has `json:"email"`)
+//     *   **`malformed_json_request`**: Sends an incomplete JSON string. Asserts status 400, `code: 4000`, `msg: "请求参数格式错误"`, and `data: {}`.
+//     *   **`service_error_email_exists`**: Simulates the service layer returning an error (e.g., email already registered). Asserts status 400 and the specific error message from the handler's logic.
 
-5.  **`TestLoginUser`**:
-    *   **`successful_login`**: Tests the happy path for login. Asserts status 200, `code: 0`, and correct login response data (token, userID).
-    *   **`validation_error_missing_password`**: Tests when `password` is missing. Asserts status 400, `code: 4001`, `msg: "输入参数校验失败"`, and `data: {"password": "password 不能为空!"}`.
-    *   **`validation_error_username_too_short` (adjusted)**: This test was adjusted. The original DTO for `UserLoginReq` has `UsernameOrEmail string \`json:"usernameOrEmail" binding:"required"\``. To test a validation error on this field, I made the test case send an empty `UsernameOrEmail` to trigger the "不能为空!" message. If `UsernameOrEmail` had more rules like `min=3`, the test would need to reflect that. The current test asserts `data: {"usernameOrEmail": "usernameOrEmail 不能为空!"}`.
-    *   **`malformed_json_request_login`**: Similar to the registration malformed JSON test, but for the login endpoint. Asserts status 400, `code: 4000`, `msg: "请求参数格式错误"`, and `data: {}`.
-    *   **`service_error_login_failed`**: Simulates the service layer returning a login failure (e.g., "用户名或密码不存在或密码错误"). Asserts status 401 (as per handler logic) and the corresponding error message.
+// 5.  **`TestLoginUser`**:
+//     *   **`successful_login`**: Tests the happy path for login. Asserts status 200, `code: 0`, and correct login response data (token, userID).
+//     *   **`validation_error_missing_password`**: Tests when `password` is missing. Asserts status 400, `code: 4001`, `msg: "输入参数校验失败"`, and `data: {"password": "password 不能为空!"}`.
+//     *   **`validation_error_username_too_short` (adjusted)**: This test was adjusted. The original DTO for `UserLoginReq` has `UsernameOrEmail string \`json:"usernameOrEmail" binding:"required"\``. To test a validation error on this field, I made the test case send an empty `UsernameOrEmail` to trigger the "不能为空!" message. If `UsernameOrEmail` had more rules like `min=3`, the test would need to reflect that. The current test asserts `data: {"usernameOrEmail": "usernameOrEmail 不能为空!"}`.
+//     *   **`malformed_json_request_login`**: Similar to the registration malformed JSON test, but for the login endpoint. Asserts status 400, `code: 4000`, `msg: "请求参数格式错误"`, and `data: {}`.
+//     *   **`service_error_login_failed`**: Simulates the service layer returning a login failure (e.g., "用户名或密码不存在或密码错误"). Asserts status 401 (as per handler logic) and the corresponding error message.
 
-All tests use `httptest.NewRecorder` and `github.com/stretchr/testify/assert`. Chinese comments are included.
-The tests for other UserHandler methods like `GetUserByUsername`, `GetUserByID`, and `GetCurrentUserProfile` are noted as out of scope for this specific task, as they don't primarily involve request body binding and the new validation/error formatting.
+// All tests use `httptest.NewRecorder` and `github.com/stretchr/testify/assert`. Chinese comments are included.
+// The tests for other UserHandler methods like `GetUserByUsername`, `GetUserByID`, and `GetCurrentUserProfile` are noted as out of scope for this specific task, as they don't primarily involve request body binding and the new validation/error formatting.
 
-I believe all parts of the subtask have now been addressed.
+// I believe all parts of the subtask have now been addressed.
 
-*   Part 1: `pkg/translator/translator_test.go` (Turn 13, then overwritten in Turn 14 with a corrected version)
-*   Part 2: `pkg/errorhandler/validation_error_handler_test.go` (Turn 15)
-*   Part 3: `internal/handler/user_handler_test.go` (This turn, Turn 17)
+// *   Part 1: `pkg/translator/translator_test.go` (Turn 13, then overwritten in Turn 14 with a corrected version)
+// *   Part 2: `pkg/errorhandler/validation_error_handler_test.go` (Turn 15)
+// *   Part 3: `internal/handler/user_handler_test.go` (This turn, Turn 17)
