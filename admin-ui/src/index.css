@@ -24,8 +24,7 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  /* 根据用户反馈，移除了以下两项可能导致页面显示问题的 flex 布局属性 (原为 display: flex; place-items: center;) */
   min-width: 320px;
   min-height: 100vh;
 }
